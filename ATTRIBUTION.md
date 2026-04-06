@@ -1,12 +1,22 @@
 # Attribution
 
-Workflows adapted from:
+This repository aggregates workflows from two open-source collections:
 
-https://github.com/enescingoz/awesome-n8n-templates
+---
 
-Author: Enes Cingoz
+## AI Workflow Hub (workflows/hub/)
 
-License: Creative Commons Attribution 4.0 International  
-https://creativecommons.org/licenses/by/4.0/
+- **Author**: Emre Taş
+- **Website**: https://www.alegoai.com/
+- **License**: MIT
+- Changes may have been made to some workflows.
 
-Changes may have been made to some workflows.
+---
+
+## Awesome n8n Templates (workflows/community/)
+
+- **Author**: Enes Cingoz
+- **Source**: https://github.com/enescingoz/awesome-n8n-templates
+- **License**: Creative Commons Attribution 4.0 International
+  https://creativecommons.org/licenses/by/4.0/
+- Changes may have been made to some workflows.

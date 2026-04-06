@@ -1,0 +1,16 @@
+# Claude Code IDE settings
+.claude/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor directories
+.vscode/
+.idea/
+
+# Environment files (never commit secrets)
+.env
+.env.local
+*.env
