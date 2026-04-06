@@ -14,3 +14,11 @@ desktop.ini
 .env
 .env.local
 *.env
+node_modules
+.next
+dist
+build
+
+# Next.js
+web/.next/
+web/node_modules/
