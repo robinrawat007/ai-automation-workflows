@@ -11,9 +11,9 @@ interface Props {
 }
 
 const TRIGGERS = ['all', 'Scheduled', 'Webhook', 'Triggered', 'Monitor', 'Manual']
-const COLLECTIONS = ['all', 'hub', 'community']
 
 export function WorkflowBrowser({ initialData, stats }: Props) {
+  const COLLECTIONS = ['all', ...Object.keys(stats.collections).sort()]
   const [data, setData] = useState(initialData)
   const [q, setQ] = useState('')
   const [trigger, setTrigger] = useState('all')
@@ -93,8 +93,8 @@ export function WorkflowBrowser({ initialData, stats }: Props) {
             label="Collection"
             options={COLLECTIONS}
             value={collection}
-            onChange={setCollection}
-            colors={{ all: 'violet', hub: 'sky', community: 'emerald' }}
+            onChange={v => { setCollection(v); setCategory('all') }}
+            colors={{ all: 'violet', hub: 'sky', community: 'emerald', awesome: 'amber', 'free-templates': 'rose', 'ai-automations': 'emerald', 'ai-agent-suite': 'sky', 'ai-agents': 'violet', masterclass: 'amber', 'templates-5000': 'rose', 'all-templates': 'slate' }}
           />
           <FilterGroup
             label="Trigger"
@@ -103,7 +103,7 @@ export function WorkflowBrowser({ initialData, stats }: Props) {
             onChange={setTrigger}
             colors={{ Scheduled: 'amber', Webhook: 'sky', Triggered: 'emerald', Monitor: 'rose', Manual: 'slate' }}
           />
-          {collection === 'community' && (
+          {stats.categories.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-xs text-slate-500">Category:</span>
               <select

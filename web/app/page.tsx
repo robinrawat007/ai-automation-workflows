@@ -23,9 +23,8 @@ export default async function Home() {
             </div>
             <div className="flex flex-wrap gap-4 text-center text-sm">
               <Stat label="Total" value={stats.total.toLocaleString()} color="text-violet-400" />
-              <Stat label="Hub" value={stats.hub.toLocaleString()} color="text-sky-400" />
-              <Stat label="Community" value={stats.community.toLocaleString()} color="text-emerald-400" />
-              <Stat label="Categories" value={String(stats.categories.length)} color="text-amber-400" />
+              <Stat label="Collections" value={String(Object.keys(stats.collections).length)} color="text-sky-400" />
+              <Stat label="Categories" value={String(stats.categories.length)} color="text-emerald-400" />
             </div>
           </div>
         </div>

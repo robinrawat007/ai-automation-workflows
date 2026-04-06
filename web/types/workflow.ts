@@ -4,7 +4,7 @@ export interface WorkflowMeta {
   name: string
   trigger: string
   services: string[]
-  collection: 'hub' | 'community'
+  collection: string
   category: string
   filePath: string
 }
@@ -27,6 +27,7 @@ export interface Stats {
   total: number
   hub: number
   community: number
+  collections: Record<string, number>
   triggers: Record<string, number>
   categories: string[]
 }
