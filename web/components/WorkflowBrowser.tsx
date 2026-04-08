@@ -1,20 +1,17 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import type { WorkflowMeta, SearchResult, Stats } from '@/types/workflow'
 import { WorkflowCard } from './WorkflowCard'
 import { WorkflowModal } from './WorkflowModal'
 
-interface Props {
-  initialData: SearchResult
-  stats: Stats
-}
-
 const TRIGGERS = ['all', 'Scheduled', 'Webhook', 'Triggered', 'Monitor', 'Manual']
+const PER_PAGE = 50
 
-export function WorkflowBrowser({ initialData, stats }: Props) {
-  const COLLECTIONS = ['all', ...Object.keys(stats.collections).sort()]
-  const [data, setData] = useState(initialData)
+export function WorkflowBrowser() {
+  const [index, setIndex] = useState<WorkflowMeta[]>([])
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [data, setData] = useState<SearchResult>({ workflows: [], total: 0, page: 1, pages: 1, perPage: PER_PAGE })
   const [q, setQ] = useState('')
   const [trigger, setTrigger] = useState('all')
   const [collection, setCollection] = useState('all')
@@ -24,41 +21,88 @@ export function WorkflowBrowser({ initialData, stats }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const fetch_ = useCallback(async (params: {
-    q: string; trigger: string; collection: string; category: string; page: number
-  }) => {
-    setLoading(true)
-    const sp = new URLSearchParams({ perPage: '50', page: String(params.page) })
-    if (params.q) sp.set('q', params.q)
-    if (params.trigger !== 'all') sp.set('trigger', params.trigger)
-    if (params.collection !== 'all') sp.set('collection', params.collection)
-    if (params.category !== 'all') sp.set('category', params.category)
-    try {
-      const res = await fetch(`/api/workflows?${sp}`)
-      const json: SearchResult = await res.json()
-      setData(json)
-    } finally {
-      setLoading(false)
-    }
+  const COLLECTIONS = useMemo(() => {
+    if (!stats) return ['all']
+    return ['all', ...Object.keys(stats.collections).sort()]
+  }, [stats])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      try {
+        const [idxRes, statsRes] = await Promise.all([
+          fetch('/workflows-index.json'),
+          fetch('/workflows-stats.json'),
+        ])
+        const [idxJson, statsJson] = await Promise.all([
+          idxRes.json() as Promise<WorkflowMeta[]>,
+          statsRes.json() as Promise<Stats>,
+        ])
+        if (cancelled) return
+        setIndex(idxJson)
+        setStats(statsJson)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
   }, [])
+
+  function compute(params: { q: string; trigger: string; collection: string; category: string; page: number }) {
+    let results = index
+    if (params.q) {
+      const query = params.q.toLowerCase()
+      results = results.filter(w =>
+        w.name.toLowerCase().includes(query) ||
+        w.filename.toLowerCase().includes(query) ||
+        w.category.toLowerCase().includes(query) ||
+        w.services.some(s => s.toLowerCase().includes(query))
+      )
+    }
+    if (params.trigger !== 'all') results = results.filter(w => w.trigger === params.trigger)
+    if (params.collection !== 'all') results = results.filter(w => w.collection === params.collection)
+    if (params.category !== 'all') results = results.filter(w => w.category === params.category)
+
+    const total = results.length
+    const pages = Math.max(1, Math.ceil(total / PER_PAGE))
+    const clamped = Math.min(Math.max(1, params.page), pages)
+    const start = (clamped - 1) * PER_PAGE
+    return {
+      workflows: results.slice(start, start + PER_PAGE),
+      total,
+      page: clamped,
+      pages,
+      perPage: PER_PAGE,
+    } satisfies SearchResult
+  }
 
   // Debounce search query; immediate for filters
   useEffect(() => {
+    if (!index.length) return
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       setPage(1)
-      fetch_({ q, trigger, collection, category, page: 1 })
-    }, 250)
-  }, [q]) // eslint-disable-line
+      setData(compute({ q, trigger, collection, category, page: 1 }))
+    }, 200)
+  }, [q, index]) // eslint-disable-line
 
   useEffect(() => {
+    if (!index.length) return
     setPage(1)
-    fetch_({ q, trigger, collection, category, page: 1 })
-  }, [trigger, collection, category]) // eslint-disable-line
+    setData(compute({ q, trigger, collection, category, page: 1 }))
+  }, [trigger, collection, category, index]) // eslint-disable-line
 
   useEffect(() => {
-    fetch_({ q, trigger, collection, category, page })
-  }, [page]) // eslint-disable-line
+    if (!index.length) return
+    setData(compute({ q, trigger, collection, category, page }))
+  }, [page, index]) // eslint-disable-line
+
+  // initial compute once index loads
+  useEffect(() => {
+    if (!index.length) return
+    setData(compute({ q: '', trigger: 'all', collection: 'all', category: 'all', page: 1 }))
+  }, [index])
 
   function handlePageChange(p: number) {
     setPage(p)
@@ -103,7 +147,7 @@ export function WorkflowBrowser({ initialData, stats }: Props) {
             onChange={setTrigger}
             colors={{ Scheduled: 'amber', Webhook: 'sky', Triggered: 'emerald', Monitor: 'rose', Manual: 'slate' }}
           />
-          {stats.categories.length > 0 && (
+          {stats && stats.categories.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-xs text-slate-500">Category:</span>
               <select

@@ -1,12 +1,7 @@
-import { searchWorkflows, getStats } from '@/lib/workflows'
 import { WorkflowBrowser } from '@/components/WorkflowBrowser'
+import { HeaderStats } from '@/components/HeaderStats'
 
-export default async function Home() {
-  const [initial, stats] = await Promise.all([
-    searchWorkflows({ perPage: 50 }),
-    getStats(),
-  ])
-
+export default function Home() {
   return (
     <main className="min-h-screen">
       {/* Header */}
@@ -21,28 +16,15 @@ export default async function Home() {
                 Browse, search, and import automation workflows into your N8N instance
               </p>
             </div>
-            <div className="flex flex-wrap gap-4 text-center text-sm">
-              <Stat label="Total" value={stats.total.toLocaleString()} color="text-violet-400" />
-              <Stat label="Collections" value={String(Object.keys(stats.collections).length)} color="text-sky-400" />
-              <Stat label="Categories" value={String(stats.categories.length)} color="text-emerald-400" />
-            </div>
+            <HeaderStats />
           </div>
         </div>
       </header>
 
       {/* Browser */}
       <div className="mx-auto max-w-7xl px-4 py-6">
-        <WorkflowBrowser initialData={initial} stats={stats} />
+        <WorkflowBrowser />
       </div>
     </main>
-  )
-}
-
-function Stat({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div className="min-w-[70px] rounded-lg border border-slate-800 bg-[#0d0d14] px-4 py-2">
-      <div className={`text-xl font-bold ${color}`}>{value}</div>
-      <div className="text-xs text-slate-500">{label}</div>
-    </div>
   )
 }

@@ -6,7 +6,11 @@ export interface WorkflowMeta {
   services: string[]
   collection: string
   category: string
-  filePath: string
+  /**
+   * Repo-relative path to the workflow JSON file (used for fetching raw JSON).
+   * Example: "workflows/hub/0001_...json"
+   */
+  repoPath: string
 }
 
 export interface WorkflowDetail {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import type { WorkflowDetail } from '@/types/workflow'
+import type { WorkflowDetail, WorkflowMeta } from '@/types/workflow'
 
 export function WorkflowModal({ id, onClose }: { id: string; onClose: () => void }) {
   const [detail, setDetail] = useState<WorkflowDetail | null>(null)
@@ -13,11 +13,30 @@ export function WorkflowModal({ id, onClose }: { id: string; onClose: () => void
   useEffect(() => {
     setLoading(true)
     setError(null)
-    fetch(`/api/workflows/detail?id=${encodeURIComponent(id)}`)
-      .then(r => r.ok ? r.json() : Promise.reject('Not found'))
-      .then((d: WorkflowDetail) => setDetail(d))
-      .catch(() => setError('Failed to load workflow'))
-      .finally(() => setLoading(false))
+    let cancelled = false
+    ;(async () => {
+      try {
+        const idx = await fetch('/workflows-index.json').then(r => r.json() as Promise<WorkflowMeta[]>)
+        const meta = idx.find(w => w.id === id)
+        if (!meta) throw new Error('Not found')
+
+        const repo = process.env.NEXT_PUBLIC_GITHUB_REPO
+        if (!repo) throw new Error('Missing NEXT_PUBLIC_GITHUB_REPO')
+
+        const rawUrl = `https://raw.githubusercontent.com/${repo}/main/${meta.repoPath}`
+        const rawJson = await fetch(rawUrl).then(r => r.ok ? r.json() : Promise.reject(new Error('Failed')))
+        const nodeCount = Array.isArray((rawJson ?? {}).nodes) ? rawJson.nodes.length : 0
+
+        if (cancelled) return
+        setDetail({ meta, rawJson, nodeCount })
+      } catch {
+        if (!cancelled) setError('Failed to load workflow')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+
+    return () => { cancelled = true }
   }, [id])
 
   // Close on Escape
