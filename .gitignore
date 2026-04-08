@@ -1,3 +1,5 @@
+# Next.js build-time copied workflow sources
+web/workflow-sources/
 # Claude Code IDE settings
 .claude/
 
