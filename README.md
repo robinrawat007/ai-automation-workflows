@@ -30,6 +30,17 @@ npm run dev
 
 Open `http://localhost:3000`
 
+## Deploy the browser on Netlify
+
+This repo includes a `netlify.toml` configured to deploy the Next.js app from `web/`.
+
+- **Build command**: `npm run build`
+- **Base directory**: `web`
+- **Publish directory**: `.next` (handled by the Next.js plugin)
+- **Node version**: 20
+
+If you deploy via the Netlify UI, just connect the Git repo and Netlify will pick up `netlify.toml` automatically.
+
 ## Import a workflow into N8N
 
 1. Find a workflow in the browser or browse the folders above
