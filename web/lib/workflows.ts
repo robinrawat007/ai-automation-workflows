@@ -2,8 +2,11 @@ import fs from 'fs'
 import path from 'path'
 import type { WorkflowMeta, SearchResult, Stats, WorkflowDetail } from '@/types/workflow'
 
-const REPO_ROOT = path.join(process.cwd(), '..')
-const WORKFLOWS_ROOT = path.join(REPO_ROOT, 'workflows')
+// On Netlify, Next API routes run in a bundled serverless context where reading
+// files outside the app base directory can break. During `npm run build` we copy
+// workflow sources into `web/workflow-sources/` so they are included.
+const SOURCES_ROOT = path.join(process.cwd(), 'workflow-sources')
+const WORKFLOWS_ROOT = path.join(SOURCES_ROOT, 'workflows')
 
 // ─── Parsers ────────────────────────────────────────────────────────────────
 
@@ -155,21 +158,21 @@ function buildIndex(): WorkflowMeta[] {
 
   // awesome-n8n-workflows: category subdirs (analytics, automation, crm, …)
   list.push(...scanSource(
-    path.join(REPO_ROOT, 'awesome-n8n-workflows'),
+    path.join(SOURCES_ROOT, 'awesome-n8n-workflows'),
     'awesome',
     firstDirCategory,
   ))
 
   // n8n-free-templates: category subdirs (AI_ML, Agriculture, …)
   list.push(...scanSource(
-    path.join(REPO_ROOT, 'n8n-free-templates'),
+    path.join(SOURCES_ROOT, 'n8n-free-templates'),
     'free-templates',
     firstDirCategory,
   ))
 
   // n8n-ai-automations: flat directory
   list.push(...scanSource(
-    path.join(REPO_ROOT, 'n8n-ai-automations'),
+    path.join(SOURCES_ROOT, 'n8n-ai-automations'),
     'ai-automations',
     null,
   ))
@@ -177,35 +180,35 @@ function buildIndex(): WorkflowMeta[] {
   // n8n-automation-2025-AI-Agent-Suite: top-level dirs are service categories
   // skip 'img' and non-JSON dirs automatically
   list.push(...scanSource(
-    path.join(REPO_ROOT, 'n8n-automation-2025-AI-Agent-Suite'),
+    path.join(SOURCES_ROOT, 'n8n-automation-2025-AI-Agent-Suite'),
     'ai-agent-suite',
     firstDirCategory,
   ))
 
   // n8n_ai_agents: numbered subdirs with agent workflows
   list.push(...scanSource(
-    path.join(REPO_ROOT, 'n8n_ai_agents'),
+    path.join(SOURCES_ROOT, 'n8n_ai_agents'),
     'ai-agents',
     firstDirCategory,
   ))
 
   // n8n-ai-agents-masterclass-2025: flat directory
   list.push(...scanSource(
-    path.join(REPO_ROOT, 'n8n-ai-agents-masterclass-2025'),
+    path.join(SOURCES_ROOT, 'n8n-ai-agents-masterclass-2025'),
     'masterclass',
     null,
   ))
 
   // n8n-automation-templates-5000: mixed structure, use top-level dir as category
   list.push(...scanSource(
-    path.join(REPO_ROOT, 'n8n-automation-templates-5000'),
+    path.join(SOURCES_ROOT, 'n8n-automation-templates-5000'),
     'templates-5000',
     firstDirCategory,
   ))
 
   // n8n-workflow-all-templates: deeply nested numbered dirs — flat category
   list.push(...scanSource(
-    path.join(REPO_ROOT, 'n8n-workflow-all-templates', 'n8n-workflow-all-templates'),
+    path.join(SOURCES_ROOT, 'n8n-workflow-all-templates', 'n8n-workflow-all-templates'),
     'all-templates',
     null,
   ))
