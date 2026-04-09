@@ -20,17 +20,21 @@ export function WorkflowModal({ id, onClose }: { id: string; onClose: () => void
         const meta = idx.find(w => w.id === id)
         if (!meta) throw new Error('Not found')
 
-        const apiUrl = `/api/workflow?path=${encodeURIComponent(meta.repoPath)}`
-        const rawJson = await fetch(apiUrl).then(async r => {
+        // Static-export friendly: fetch workflow JSON from a public base URL.
+        // For public GitHub repos, raw.githubusercontent.com works.
+        // For private repos, set NEXT_PUBLIC_WORKFLOW_JSON_BASE_URL to a URL that can serve these files publicly.
+        const base =
+          process.env.NEXT_PUBLIC_WORKFLOW_JSON_BASE_URL?.replace(/\/+$/, '') ||
+          `https://raw.githubusercontent.com/${process.env.NEXT_PUBLIC_GITHUB_REPO}/main`
+
+        if (!base || base.includes('undefined')) {
+          throw new Error('Missing NEXT_PUBLIC_GITHUB_REPO or NEXT_PUBLIC_WORKFLOW_JSON_BASE_URL')
+        }
+
+        const rawUrl = `${base}/${meta.repoPath}`
+        const rawJson = await fetch(rawUrl).then(async r => {
           if (r.ok) return r.json()
-          let err = 'Failed to load workflow JSON'
-          try {
-            const body = await r.json()
-            if (body?.error) err = String(body.error)
-          } catch {
-            // ignore
-          }
-          throw new Error(`${err} (${r.status})`)
+          throw new Error(`Failed to fetch workflow JSON (${r.status})`)
         })
         const nodeCount = Array.isArray((rawJson ?? {}).nodes) ? rawJson.nodes.length : 0
 
