@@ -23,9 +23,14 @@ export function WorkflowModal({ id, onClose }: { id: string; onClose: () => void
         // Static-export friendly: fetch workflow JSON from a public base URL.
         // For public GitHub repos, raw.githubusercontent.com works.
         // For private repos, set NEXT_PUBLIC_WORKFLOW_JSON_BASE_URL to a URL that can serve these files publicly.
+        const repo =
+          process.env.NEXT_PUBLIC_GITHUB_REPO ||
+          // Default so local dev works without env setup.
+          'robinrawat007/ai-automation-workflows'
+
         const base =
           process.env.NEXT_PUBLIC_WORKFLOW_JSON_BASE_URL?.replace(/\/+$/, '') ||
-          `https://raw.githubusercontent.com/${process.env.NEXT_PUBLIC_GITHUB_REPO}/main`
+          `https://raw.githubusercontent.com/${repo}/main`
 
         if (!base || base.includes('undefined')) {
           throw new Error('Missing NEXT_PUBLIC_GITHUB_REPO or NEXT_PUBLIC_WORKFLOW_JSON_BASE_URL')
