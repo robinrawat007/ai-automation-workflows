@@ -20,17 +20,24 @@ export function WorkflowModal({ id, onClose }: { id: string; onClose: () => void
         const meta = idx.find(w => w.id === id)
         if (!meta) throw new Error('Not found')
 
-        const repo = process.env.NEXT_PUBLIC_GITHUB_REPO
-        if (!repo) throw new Error('Missing NEXT_PUBLIC_GITHUB_REPO')
-
-        const rawUrl = `https://raw.githubusercontent.com/${repo}/main/${meta.repoPath}`
-        const rawJson = await fetch(rawUrl).then(r => r.ok ? r.json() : Promise.reject(new Error('Failed')))
+        const apiUrl = `/api/workflow?path=${encodeURIComponent(meta.repoPath)}`
+        const rawJson = await fetch(apiUrl).then(async r => {
+          if (r.ok) return r.json()
+          let err = 'Failed to load workflow JSON'
+          try {
+            const body = await r.json()
+            if (body?.error) err = String(body.error)
+          } catch {
+            // ignore
+          }
+          throw new Error(`${err} (${r.status})`)
+        })
         const nodeCount = Array.isArray((rawJson ?? {}).nodes) ? rawJson.nodes.length : 0
 
         if (cancelled) return
         setDetail({ meta, rawJson, nodeCount })
-      } catch {
-        if (!cancelled) setError('Failed to load workflow')
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load workflow')
       } finally {
         if (!cancelled) setLoading(false)
       }
